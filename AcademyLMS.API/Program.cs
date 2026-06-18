@@ -8,8 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+var baseConnectionString = builder.Configuration.GetConnectionString("AcademyDb")
+    ?? throw new InvalidOperationException("Connection string 'AcademyDb' was not found.");
+
+var connectionString = DatabaseConnectionBuilder.BuildAttachDbConnectionString(
+    baseConnectionString,
+    builder.Environment.ContentRootPath,
+    builder.Configuration["Database:DataDirectory"] ?? "DB",
+    builder.Configuration["Database:DatabaseFileName"] ?? "AcademyLMS.mdf");
+
 builder.Services.AddDbContext<AcademyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AcademyDb")));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
