@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="AcademyLMS.API/AcademyLMS.API.csproj" />
+  <Project Path="AcademyLMS.BusinessLogic/AcademyLMS.BusinessLogic.csproj" />
+  <Project Path="AcademyLMS.DataAccess/AcademyLMS.DataAccess.csproj" />
+</Solution>
