@@ -31,5 +31,28 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Enrollments, opt => opt.Ignore());
 
         CreateMap<Course, CourseCreateDto>();
+
+        CreateMap<Teacher, TeacherDto>();
+
+        CreateMap<TeacherDto, Teacher>()
+            .ForMember(dest => dest.Courses, opt => opt.Ignore());
+
+        CreateMap<TeacherCreateDto, Teacher>()
+            .ForMember(dest => dest.TeacherId, opt => opt.Ignore())
+            .ForMember(dest => dest.Courses, opt => opt.Ignore());
+
+        CreateMap<Teacher, TeacherCreateDto>();
+
+        CreateMap<Enrollment, EnrollmentDto>();
+
+        CreateMap<EnrollmentDto, Enrollment>()
+            .ForMember(dest => dest.Student, opt => opt.Ignore())
+            .ForMember(dest => dest.Course, opt => opt.Ignore());
+
+        CreateMap<EnrollmentCreateDto, Enrollment>()
+            .ForMember(dest => dest.Student, opt => opt.Ignore())
+            .ForMember(dest => dest.Course, opt => opt.Ignore());
+
+        CreateMap<Enrollment, EnrollmentCreateDto>();
     }
 }

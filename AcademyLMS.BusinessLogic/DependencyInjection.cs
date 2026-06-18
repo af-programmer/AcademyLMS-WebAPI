@@ -12,6 +12,8 @@ public static class DependencyInjection
         services.AddAutoMapper(_ => { }, typeof(MappingProfile));
         services.AddScoped<IStudentService, StudentService>();
         services.AddScoped<ICourseService, CourseService>();
+        services.AddScoped<ITeacherService, TeacherService>();
+        services.AddScoped<IEnrollmentService, EnrollmentService>();
         return services;
     }
 }

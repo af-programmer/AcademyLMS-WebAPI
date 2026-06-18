@@ -333,4 +333,13 @@ Database files (`.mdf`, `.ldf`) in the `DB/` folder are excluded from source con
 
 ## License
 
-This project is provided for academic and educational purposes.
+---
+dotnet clean
+
+dotnet build
+
+dotnet ef database update --project AcademyLMS.DataAccess --startup-project AcademyLMS.API
+
+dotnet run --project AcademyLMS.API
+
+---

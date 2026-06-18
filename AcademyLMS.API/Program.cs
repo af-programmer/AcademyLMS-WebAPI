@@ -22,12 +22,26 @@ builder.Services.AddDbContext<AcademyDbContext>(options =>
 
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
+builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 
 builder.Services.AddBusinessLogic();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info = new()
+        {
+            Title = "Academy LMS API",
+            Version = "v1",
+            Description = "REST API for managing students, courses, teachers, and enrollments in the Academy LMS."
+        };
+        return Task.CompletedTask;
+    });
+});
 
 var app = builder.Build();
 
@@ -37,6 +51,12 @@ app.UseExceptionHandling();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    app.UseSwaggerUI(swaggerOptions =>
+    {
+        swaggerOptions.SwaggerEndpoint("/openapi/v1.json", "Academy LMS API v1");
+        swaggerOptions.DocumentTitle = "Academy LMS API";
+    });
 }
 
 app.UseHttpsRedirection();
