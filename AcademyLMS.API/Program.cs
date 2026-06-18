@@ -1,4 +1,5 @@
 using AcademyLMS.DataAccess;
+using AcademyLMS.DataAccess.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AcademyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AcademyDb")));
+
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
