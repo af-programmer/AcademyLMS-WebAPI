@@ -12,6 +12,7 @@ builder.Services.AddDbContext<AcademyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AcademyDb")));
 
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 
 builder.Services.AddBusinessLogic();
 

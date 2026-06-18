@@ -18,5 +18,18 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Enrollments, opt => opt.Ignore());
 
         CreateMap<Student, StudentCreateDto>();
+
+        CreateMap<Course, CourseDto>();
+
+        CreateMap<CourseDto, Course>()
+            .ForMember(dest => dest.Teacher, opt => opt.Ignore())
+            .ForMember(dest => dest.Enrollments, opt => opt.Ignore());
+
+        CreateMap<CourseCreateDto, Course>()
+            .ForMember(dest => dest.CourseId, opt => opt.Ignore())
+            .ForMember(dest => dest.Teacher, opt => opt.Ignore())
+            .ForMember(dest => dest.Enrollments, opt => opt.Ignore());
+
+        CreateMap<Course, CourseCreateDto>();
     }
 }
