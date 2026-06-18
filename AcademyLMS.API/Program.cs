@@ -1,3 +1,4 @@
+using AcademyLMS.API.Middleware;
 using AcademyLMS.BusinessLogic;
 using AcademyLMS.DataAccess;
 using AcademyLMS.DataAccess.Repositories;
@@ -19,6 +20,8 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+app.UseExceptionHandling();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
