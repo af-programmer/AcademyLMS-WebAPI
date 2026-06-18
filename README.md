@@ -14,6 +14,7 @@ AcademyLMS is a Learning Management System (LMS) built for academic institutions
 - [Prerequisites](#prerequisites)
 - [Installation & Setup](#installation--setup)
 - [Running the Application](#running-the-application)
+- [API Documentation (Swagger)](#api-documentation-swagger)
 - [API Endpoints](#api-endpoints)
 - [Configuration](#configuration)
 
@@ -21,13 +22,14 @@ AcademyLMS is a Learning Management System (LMS) built for academic institutions
 
 ## Features
 
-- Full **CRUD** operations for **Students** and **Courses**
+- Full **CRUD** operations for all four core entities: **Students**, **Courses**, **Teachers**, and **Enrollments**
 - **Entity Framework Core** with SQL Server LocalDB
 - **Repository pattern** with async/await throughout the data layer
 - **DTOs** and **AutoMapper** to prevent exposing database entities to clients
-- **Data Annotations** validation on create requests
+- **Data Annotations** validation on create and update requests
 - **Global exception-handling middleware** with structured JSON error responses
-- Layered design ready for extension (teachers, enrollments, authentication, etc.)
+- **Interactive Swagger UI** for exploring and testing the API in Development
+- Layered design ready for extension (authentication, authorization, etc.)
 
 ---
 
@@ -40,7 +42,8 @@ AcademyLMS is a Learning Management System (LMS) built for academic institutions
 | ORM | Entity Framework Core 10 |
 | Database | SQL Server LocalDB |
 | Mapping | AutoMapper 16 |
-| API Documentation | OpenAPI (Development) |
+| OpenAPI | `Microsoft.AspNetCore.OpenApi` |
+| API UI | `Swashbuckle.AspNetCore.SwaggerUI` (Development) |
 
 ---
 
@@ -85,10 +88,11 @@ The solution follows a **3-layer N-tier architecture**. Each layer has a single 
 
 The entry point for HTTP clients. Responsibilities include:
 
-- REST controllers (`StudentsController`, `CoursesController`)
+- REST controllers (`StudentsController`, `CoursesController`, `TeachersController`, `EnrollmentsController`)
 - Request validation and HTTP status codes (200, 201, 400, 404, 500)
 - Dependency injection wiring (`Program.cs`)
 - Global exception-handling middleware
+- Swagger UI (Development only)
 
 This layer **never** exposes EF Core entities. It communicates exclusively through DTOs via the business layer.
 
@@ -96,10 +100,10 @@ This layer **never** exposes EF Core entities. It communicates exclusively throu
 
 The intermediary between the API and the database. Responsibilities include:
 
-- Service interfaces and implementations (`IStudentService`, `ICourseService`)
-- Data Transfer Objects (`StudentDto`, `CourseCreateDto`, etc.)
-- AutoMapper profiles for entity ↔ DTO conversion
-- Input validation attributes on create DTOs
+- Service interfaces and implementations for all four entities
+- Data Transfer Objects (`StudentDto`, `CourseCreateDto`, `TeacherDto`, `EnrollmentDto`, etc.)
+- AutoMapper profiles for bidirectional entity ↔ DTO conversion
+- Input validation attributes on DTOs
 
 Services inject repository interfaces and `IMapper`, keeping persistence details out of the API.
 
@@ -109,7 +113,7 @@ Responsible for all database interaction. Responsibilities include:
 
 - `AcademyDbContext` with Fluent API relationship configuration
 - Entity classes (`Student`, `Course`, `Teacher`, `Enrollment`)
-- Repository interfaces and async implementations
+- Repository interfaces and async implementations for all four entities
 - EF Core queries using async methods only (`ToListAsync`, `FindAsync`, `SaveChangesAsync`, etc.)
 
 ---
@@ -201,7 +205,7 @@ cd AcademyLMS
 ### 2. Restore NuGet packages
 
 ```bash
-dotnet restore
+dotnet restore AcademyLMS.API
 ```
 
 ### 3. Configure the database connection
@@ -233,10 +237,10 @@ dotnet ef database update --project AcademyLMS.DataAccess --startup-project Acad
 
 This creates `AcademyLMS.mdf` inside the `DB/` directory.
 
-### 5. Build the solution
+### 5. Build the project
 
 ```bash
-dotnet build
+dotnet build AcademyLMS.API
 ```
 
 ---
@@ -256,11 +260,22 @@ Default URLs (see `Properties/launchSettings.json`):
 | HTTP | `http://localhost:5161` |
 | HTTPS | `https://localhost:7220` |
 
-In **Development**, OpenAPI metadata is available at:
+The browser opens automatically to Swagger UI in Development.
 
-```
-http://localhost:5161/openapi/v1.json
-```
+---
+
+## API Documentation (Swagger)
+
+In **Development**, the API exposes:
+
+| Resource | URL |
+|----------|-----|
+| **Swagger UI** | `http://localhost:5161/swagger` |
+| **OpenAPI JSON** | `http://localhost:5161/openapi/v1.json` |
+
+Swagger UI is powered by the built-in `Microsoft.AspNetCore.OpenApi` document generator and `Swashbuckle.AspNetCore.SwaggerUI`. Both are registered only when `ASPNETCORE_ENVIRONMENT=Development`.
+
+Use Swagger to explore all four controllers, inspect request/response schemas, and execute API calls directly from the browser.
 
 ---
 
@@ -307,6 +322,50 @@ http://localhost:5161/openapi/v1.json
 }
 ```
 
+### Teachers — `api/teachers`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| `GET` | `/api/teachers` | Get all teachers (optional `?department=` filter) |
+| `GET` | `/api/teachers/{id}` | Get a teacher by ID |
+| `POST` | `/api/teachers` | Create a new teacher |
+| `PUT` | `/api/teachers/{id}` | Update an existing teacher |
+| `DELETE` | `/api/teachers/{id}` | Delete a teacher |
+
+**Create request example:**
+
+```json
+{
+  "firstName": "David",
+  "lastName": "Cohen",
+  "email": "david.cohen@academy.edu",
+  "department": "Computer Science"
+}
+```
+
+### Enrollments — `api/enrollments`
+
+Enrollments use a **composite key** (`StudentId` + `CourseId`) to link students to courses.
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| `GET` | `/api/enrollments` | Get all enrollments (optional `?studentId=` / `?courseId=` filters) |
+| `GET` | `/api/enrollments/{studentId}/{courseId}` | Get a specific enrollment |
+| `POST` | `/api/enrollments` | Register a student to a course |
+| `PUT` | `/api/enrollments/{studentId}/{courseId}` | Update grade or enrollment date |
+| `DELETE` | `/api/enrollments/{studentId}/{courseId}` | Remove a student's course registration |
+
+**Create request example:**
+
+```json
+{
+  "studentId": 1,
+  "courseId": 2,
+  "grade": 85,
+  "enrollmentDate": "2026-01-15T09:00:00Z"
+}
+```
+
 ### HTTP Status Codes
 
 | Code | Meaning |
@@ -325,21 +384,19 @@ http://localhost:5161/openapi/v1.json
 |---------|----------|---------|
 | Connection string | `AcademyLMS.API/appsettings.json` | LocalDB file path and server |
 | Development overrides | `AcademyLMS.API/appsettings.Development.json` | Environment-specific settings |
-| Launch URLs | `AcademyLMS.API/Properties/launchSettings.json` | Local development ports |
+| Launch URLs | `AcademyLMS.API/Properties/launchSettings.json` | Local development ports and Swagger launch URL |
 
 Database files (`.mdf`, `.ldf`) in the `DB/` folder are excluded from source control via `.gitignore`.
 
 ---
 
-## License
+## Quick Start (TL;DR)
 
----
-dotnet clean
-
-dotnet build
-
+```bash
+dotnet restore AcademyLMS.API
+dotnet build AcademyLMS.API
 dotnet ef database update --project AcademyLMS.DataAccess --startup-project AcademyLMS.API
-
 dotnet run --project AcademyLMS.API
+```
 
----
+Then open **http://localhost:5161/swagger** to explore the API.
