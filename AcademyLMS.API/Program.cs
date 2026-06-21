@@ -1,8 +1,6 @@
 using AcademyLMS.API.Middleware;
 using AcademyLMS.BusinessLogic;
 using AcademyLMS.DataAccess;
-using AcademyLMS.DataAccess.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,14 +15,7 @@ var connectionString = DatabaseConnectionBuilder.BuildAttachDbConnectionString(
     builder.Configuration["Database:DataDirectory"] ?? "DB",
     builder.Configuration["Database:DatabaseFileName"] ?? "AcademyLMS.mdf");
 
-builder.Services.AddDbContext<AcademyDbContext>(options =>
-    options.UseSqlServer(connectionString));
-
-builder.Services.AddScoped<IStudentRepository, StudentRepository>();
-builder.Services.AddScoped<ICourseRepository, CourseRepository>();
-builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
-builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
-
+builder.Services.AddDataAccess(connectionString);
 builder.Services.AddBusinessLogic();
 
 builder.Services.AddControllers();

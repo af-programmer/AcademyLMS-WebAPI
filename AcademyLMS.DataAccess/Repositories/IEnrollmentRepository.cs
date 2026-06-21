@@ -4,7 +4,7 @@ namespace AcademyLMS.DataAccess.Repositories;
 
 public interface IEnrollmentRepository
 {
-    Task<IReadOnlyList<Enrollment>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Enrollment>> GetAllAsync(int? studentId = null, int? courseId = null, CancellationToken cancellationToken = default);
 
     Task<Enrollment?> GetByIdAsync(int studentId, int courseId, CancellationToken cancellationToken = default);
 

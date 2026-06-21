@@ -12,11 +12,17 @@ public class StudentRepository : IStudentRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<Student>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Student>> GetAllAsync(string? email = null, CancellationToken cancellationToken = default)
     {
-        return await _context.Students
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var query = _context.Students.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            var normalizedEmail = email.Trim().ToLower();
+            query = query.Where(s => s.Email.ToLower() == normalizedEmail);
+        }
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     public async Task<Student?> GetByIdAsync(int studentId, CancellationToken cancellationToken = default)

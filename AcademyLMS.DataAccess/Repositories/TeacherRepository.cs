@@ -12,11 +12,19 @@ public class TeacherRepository : ITeacherRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<Teacher>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Teacher>> GetAllAsync(string? department = null, CancellationToken cancellationToken = default)
     {
-        return await _context.Teachers
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var query = _context.Teachers.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(department))
+        {
+            var normalizedDepartment = department.Trim().ToLower();
+            query = query.Where(t =>
+                t.Department != null &&
+                t.Department.ToLower() == normalizedDepartment);
+        }
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     public async Task<Teacher?> GetByIdAsync(int teacherId, CancellationToken cancellationToken = default)

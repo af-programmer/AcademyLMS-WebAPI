@@ -12,11 +12,16 @@ public class CourseRepository : ICourseRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<Course>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Course>> GetAllAsync(int? teacherId = null, CancellationToken cancellationToken = default)
     {
-        return await _context.Courses
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var query = _context.Courses.AsNoTracking();
+
+        if (teacherId.HasValue)
+        {
+            query = query.Where(c => c.TeacherId == teacherId.Value);
+        }
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     public async Task<Course?> GetByIdAsync(int courseId, CancellationToken cancellationToken = default)

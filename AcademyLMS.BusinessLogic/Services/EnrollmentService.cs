@@ -1,4 +1,5 @@
 using AcademyLMS.BusinessLogic.DTOs;
+using AcademyLMS.BusinessLogic.Exceptions;
 using AcademyLMS.DataAccess.Entities;
 using AcademyLMS.DataAccess.Repositories;
 using AutoMapper;
@@ -24,9 +25,9 @@ public class EnrollmentService : IEnrollmentService
         _mapper = mapper;
     }
 
-    public async Task<IReadOnlyList<EnrollmentDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<EnrollmentDto>> GetAllAsync(int? studentId = null, int? courseId = null, CancellationToken cancellationToken = default)
     {
-        var enrollments = await _enrollmentRepository.GetAllAsync(cancellationToken);
+        var enrollments = await _enrollmentRepository.GetAllAsync(studentId, courseId, cancellationToken);
         return _mapper.Map<IReadOnlyList<EnrollmentDto>>(enrollments);
     }
 
@@ -36,24 +37,25 @@ public class EnrollmentService : IEnrollmentService
         return enrollment is null ? null : _mapper.Map<EnrollmentDto>(enrollment);
     }
 
-    public async Task<EnrollmentDto?> CreateAsync(EnrollmentCreateDto createDto, CancellationToken cancellationToken = default)
+    public async Task<EnrollmentDto> CreateAsync(EnrollmentCreateDto createDto, CancellationToken cancellationToken = default)
     {
         var student = await _studentRepository.GetByIdAsync(createDto.StudentId, cancellationToken);
         if (student is null)
         {
-            return null;
+            throw new NotFoundException($"Student with id {createDto.StudentId} was not found.");
         }
 
         var course = await _courseRepository.GetByIdAsync(createDto.CourseId, cancellationToken);
         if (course is null)
         {
-            return null;
+            throw new NotFoundException($"Course with id {createDto.CourseId} was not found.");
         }
 
         var existing = await _enrollmentRepository.GetByIdAsync(createDto.StudentId, createDto.CourseId, cancellationToken);
         if (existing is not null)
         {
-            return null;
+            throw new ConflictException(
+                $"Student {createDto.StudentId} is already enrolled in course {createDto.CourseId}.");
         }
 
         var enrollment = _mapper.Map<Enrollment>(createDto);

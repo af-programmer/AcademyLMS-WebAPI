@@ -16,9 +16,9 @@ public class StudentService : IStudentService
         _mapper = mapper;
     }
 
-    public async Task<IReadOnlyList<StudentDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<StudentDto>> GetAllAsync(string? email = null, CancellationToken cancellationToken = default)
     {
-        var students = await _studentRepository.GetAllAsync(cancellationToken);
+        var students = await _studentRepository.GetAllAsync(email, cancellationToken);
         return _mapper.Map<IReadOnlyList<StudentDto>>(students);
     }
 

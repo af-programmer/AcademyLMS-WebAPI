@@ -4,7 +4,7 @@ namespace AcademyLMS.DataAccess.Repositories;
 
 public interface ICourseRepository
 {
-    Task<IReadOnlyList<Course>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Course>> GetAllAsync(int? teacherId = null, CancellationToken cancellationToken = default);
 
     Task<Course?> GetByIdAsync(int courseId, CancellationToken cancellationToken = default);
 

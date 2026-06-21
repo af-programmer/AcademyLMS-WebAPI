@@ -4,7 +4,7 @@ namespace AcademyLMS.BusinessLogic.Services;
 
 public interface ICourseService
 {
-    Task<IReadOnlyList<CourseDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CourseDto>> GetAllAsync(int? teacherId = null, CancellationToken cancellationToken = default);
 
     Task<CourseDto?> GetByIdAsync(int courseId, CancellationToken cancellationToken = default);
 

@@ -12,11 +12,21 @@ public class EnrollmentRepository : IEnrollmentRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<Enrollment>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Enrollment>> GetAllAsync(int? studentId = null, int? courseId = null, CancellationToken cancellationToken = default)
     {
-        return await _context.Enrollments
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var query = _context.Enrollments.AsNoTracking();
+
+        if (studentId.HasValue)
+        {
+            query = query.Where(e => e.StudentId == studentId.Value);
+        }
+
+        if (courseId.HasValue)
+        {
+            query = query.Where(e => e.CourseId == courseId.Value);
+        }
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     public async Task<Enrollment?> GetByIdAsync(int studentId, int courseId, CancellationToken cancellationToken = default)

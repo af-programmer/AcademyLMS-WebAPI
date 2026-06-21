@@ -4,11 +4,11 @@ namespace AcademyLMS.BusinessLogic.Services;
 
 public interface IEnrollmentService
 {
-    Task<IReadOnlyList<EnrollmentDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<EnrollmentDto>> GetAllAsync(int? studentId = null, int? courseId = null, CancellationToken cancellationToken = default);
 
     Task<EnrollmentDto?> GetByIdAsync(int studentId, int courseId, CancellationToken cancellationToken = default);
 
-    Task<EnrollmentDto?> CreateAsync(EnrollmentCreateDto createDto, CancellationToken cancellationToken = default);
+    Task<EnrollmentDto> CreateAsync(EnrollmentCreateDto createDto, CancellationToken cancellationToken = default);
 
     Task<EnrollmentDto?> UpdateAsync(int studentId, int courseId, EnrollmentDto enrollmentDto, CancellationToken cancellationToken = default);
 
