@@ -1,6 +1,6 @@
-# AcademyLMS
+﻿# ClinicFlow
 
-AcademyLMS is a Learning Management System (LMS) built for academic institutions. It provides a RESTful Web API for managing core academic data—students, courses, teachers, and enrollments—using a clean **N-tier architecture** with strict separation of concerns, fully asynchronous data access, and DTO-based communication with clients.
+ClinicFlow is a clinic management REST API for managing patients, doctors, treatments, and appointments. It uses a clean **N-tier architecture** with strict separation of concerns, fully asynchronous data access, and DTO-based communication with clients.
 
 ---
 
@@ -22,7 +22,7 @@ AcademyLMS is a Learning Management System (LMS) built for academic institutions
 
 ## Features
 
-- Full **CRUD** operations for all four core entities: **Students**, **Courses**, **Teachers**, and **Enrollments**
+- Full **CRUD** operations for all four core entities: **Patients**, **Doctors**, **Treatments**, and **Appointments**
 - **Entity Framework Core** with SQL Server LocalDB
 - **Repository pattern** with async/await throughout the data layer
 - **DTOs** and **AutoMapper** to prevent exposing database entities to clients
@@ -50,12 +50,12 @@ AcademyLMS is a Learning Management System (LMS) built for academic institutions
 ## Solution Structure
 
 ```
-AcademyLMS/
-├── AcademyLMS.API/              # Presentation layer (controllers, middleware)
-├── AcademyLMS.BusinessLogic/    # Business layer (services, DTOs, mapping)
-├── AcademyLMS.DataAccess/       # Data layer (DbContext, entities, repositories)
+ClinicFlow/
+├── ClinicFlow.API/              # Presentation layer (controllers, middleware)
+├── ClinicFlow.BusinessLogic/    # Business layer (services, DTOs, mapping)
+├── ClinicFlow.DataAccess/       # Data layer (DbContext, entities, repositories)
 ├── DB/                          # LocalDB database files (.mdf / .ldf)
-└── AcademyLMS.slnx              # Solution file
+└── ClinicFlow.slnx              # Solution file
 ```
 
 ---
@@ -66,29 +66,29 @@ The solution follows a **3-layer N-tier architecture**. Each layer has a single 
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                   AcademyLMS.API                        │
+│                   ClinicFlow.API                        │
 │  Controllers · Middleware · DI Registration             │
 │  Accepts/returns DTOs only                                │
 └──────────────────────────┬──────────────────────────────┘
                            │
 ┌──────────────────────────▼──────────────────────────────┐
-│              AcademyLMS.BusinessLogic                     │
+│              ClinicFlow.BusinessLogic                     │
 │  Services · DTOs · AutoMapper Profiles                    │
 │  Business rules · Entity ↔ DTO mapping                    │
 └──────────────────────────┬──────────────────────────────┘
                            │
 ┌──────────────────────────▼──────────────────────────────┐
-│               AcademyLMS.DataAccess                     │
-│  AcademyDbContext · Entities · Repositories             │
+│               ClinicFlow.DataAccess                     │
+│  ClinicFlowDbContext · Entities · Repositories             │
 │  EF Core · Database persistence                         │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 1. API Layer (`AcademyLMS.API`)
+### 1. API Layer (`ClinicFlow.API`)
 
 The entry point for HTTP clients. Responsibilities include:
 
-- REST controllers (`StudentsController`, `CoursesController`, `TeachersController`, `EnrollmentsController`)
+- REST controllers (`PatientsController`, `DoctorsController`, `TreatmentsController`, `AppointmentsController`)
 - Request validation and HTTP status codes (200, 201, 400, 404, 500)
 - Dependency injection wiring (`Program.cs`)
 - Global exception-handling middleware
@@ -96,23 +96,23 @@ The entry point for HTTP clients. Responsibilities include:
 
 This layer **never** exposes EF Core entities. It communicates exclusively through DTOs via the business layer.
 
-### 2. Business Logic Layer (`AcademyLMS.BusinessLogic`)
+### 2. Business Logic Layer (`ClinicFlow.BusinessLogic`)
 
 The intermediary between the API and the database. Responsibilities include:
 
 - Service interfaces and implementations for all four entities
-- Data Transfer Objects (`StudentDto`, `CourseCreateDto`, `TeacherDto`, `EnrollmentDto`, etc.)
+- Data Transfer Objects (`PatientDto`, `DoctorCreateDto`, `TreatmentDto`, `AppointmentDto`, etc.)
 - AutoMapper profiles for bidirectional entity ↔ DTO conversion
 - Input validation attributes on DTOs
 
 Services inject repository interfaces and `IMapper`, keeping persistence details out of the API.
 
-### 3. Data Access Layer (`AcademyLMS.DataAccess`)
+### 3. Data Access Layer (`ClinicFlow.DataAccess`)
 
 Responsible for all database interaction. Responsibilities include:
 
-- `AcademyDbContext` with Fluent API relationship configuration
-- Entity classes (`Student`, `Course`, `Teacher`, `Enrollment`)
+- `ClinicFlowDbContext` with Fluent API relationship configuration
+- Entity classes (`Patient`, `Doctor`, `Treatment`, `Appointment`)
 - Repository interfaces and async implementations for all four entities
 - EF Core queries using async methods only (`ToListAsync`, `FindAsync`, `SaveChangesAsync`, etc.)
 
@@ -120,60 +120,69 @@ Responsible for all database interaction. Responsibilities include:
 
 ## Database Entities & Relationships
 
-The data model supports teachers delivering courses and students enrolling in them.
+The data model supports doctors offering treatments and patients booking appointments.
 
 ```mermaid
 erDiagram
-    Teacher ||--o{ Course : teaches
-    Student ||--o{ Enrollment : has
-    Course ||--o{ Enrollment : includes
+    Doctor ||--o{ Treatment : offers
+    Patient ||--o{ Appointment : has
+    Treatment ||--o{ Appointment : includes
 
-    Teacher {
-        int TeacherId PK
+    Doctor {
+        int DoctorId PK
         string FirstName
         string LastName
         string Email
-        string Department
+        string Specialty
     }
 
-    Course {
-        int CourseId PK
-        string Title
+    Treatment {
+        int TreatmentId PK
+        string Name
         string Description
-        int Credits
-        int TeacherId FK
+        int DurationMinutes
+        int DoctorId FK
     }
 
-    Student {
-        int StudentId PK
+    Patient {
+        int PatientId PK
         string FirstName
         string LastName
         string Email
     }
 
-    Enrollment {
-        int StudentId PK_FK
-        int CourseId PK_FK
-        int Grade
-        datetime EnrollmentDate
+    Appointment {
+        int PatientId PK_FK
+        int TreatmentId PK_FK
+        int Status
+        datetime AppointmentDate
     }
 ```
 
 | Entity | Description |
 |--------|-------------|
-| **Teacher** | An instructor who teaches one or more courses. |
-| **Course** | An academic course assigned to a single teacher. |
-| **Student** | A learner who can enroll in multiple courses. |
-| **Enrollment** | Join entity linking a student to a course, storing **Grade** and **EnrollmentDate**. |
+| **Doctor** | A physician who offers one or more treatments. |
+| **Treatment** | A medical treatment assigned to a single doctor. |
+| **Patient** | A patient who can book multiple treatments. |
+| **Appointment** | Join entity linking a patient to a treatment, storing **Status** and **AppointmentDate**. |
+
+### Appointment Status Values
+
+| Value | Meaning |
+|-------|---------|
+| `0` | Scheduled |
+| `1` | Completed |
+| `2` | Cancelled |
+| `3` | No-show |
 
 ### Relationships
 
 | Relationship | Type | Description |
 |--------------|------|-------------|
-| Teacher → Course | **One-to-Many** | One teacher can teach many courses; each course belongs to one teacher. |
-| Student ↔ Course | **Many-to-Many** | Implemented through the **Enrollment** join entity, which also stores grade and enrollment date. |
+| Doctor → Treatment | **One-to-Many** | One doctor can offer many treatments; each treatment belongs to one doctor. |
+| Patient ↔ Treatment | **Many-to-Many** | Implemented through the **Appointment** join entity, which also stores status and appointment date. |
 
-The composite primary key on `Enrollment` (`StudentId`, `CourseId`) is configured in `AcademyDbContext.OnModelCreating` using the Fluent API.
+The composite primary key on `Appointment` (`PatientId`, `TreatmentId`) is configured in `ClinicFlowDbContext.OnModelCreating` using the Fluent API.
 
 ---
 
@@ -199,22 +208,22 @@ dotnet --version
 
 ```bash
 git clone <repository-url>
-cd AcademyLMS
+cd ClinicFlow
 ```
 
 ### 2. Restore NuGet packages
 
 ```bash
-dotnet restore AcademyLMS.API
+dotnet restore ClinicFlow.API
 ```
 
 ### 3. Configure the database connection
 
-The connection string is defined in `AcademyLMS.API/appsettings.json` and points to a LocalDB file in the solution's `DB/` folder:
+The connection string is defined in `ClinicFlow.API/appsettings.json` and points to a LocalDB file in the solution's `DB/` folder:
 
 ```json
 "ConnectionStrings": {
-  "AcademyDb": "Server=(localdb)\\mssqllocaldb;AttachDbFilename=../DB/AcademyLMS.mdf;Database=AcademyLMS;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true"
+  "ClinicFlowDb": "Server=(localdb)\\mssqllocaldb;Database=ClinicFlow;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true"
 }
 ```
 
@@ -231,16 +240,16 @@ dotnet tool install --global dotnet-ef
 From the solution root, create and apply the initial migration:
 
 ```bash
-dotnet ef migrations add InitialCreate --project AcademyLMS.DataAccess --startup-project AcademyLMS.API
-dotnet ef database update --project AcademyLMS.DataAccess --startup-project AcademyLMS.API
+dotnet ef migrations add InitialCreate --project ClinicFlow.DataAccess --startup-project ClinicFlow.API
+dotnet ef database update --project ClinicFlow.DataAccess --startup-project ClinicFlow.API
 ```
 
-This creates `AcademyLMS.mdf` inside the `DB/` directory.
+This creates `ClinicFlow.mdf` inside the `DB/` directory.
 
 ### 5. Build the project
 
 ```bash
-dotnet build AcademyLMS.API
+dotnet build ClinicFlow.API
 ```
 
 ---
@@ -250,7 +259,7 @@ dotnet build AcademyLMS.API
 Start the API from the solution root:
 
 ```bash
-dotnet run --project AcademyLMS.API
+dotnet run --project ClinicFlow.API
 ```
 
 Default URLs (see `Properties/launchSettings.json`):
@@ -281,15 +290,15 @@ Use Swagger to explore all four controllers, inspect request/response schemas, a
 
 ## API Endpoints
 
-### Students — `api/students`
+### Patients — `api/patients`
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| `GET` | `/api/students` | Get all students (optional `?email=` filter) |
-| `GET` | `/api/students/{id}` | Get a student by ID |
-| `POST` | `/api/students` | Create a new student |
-| `PUT` | `/api/students/{id}` | Update an existing student |
-| `DELETE` | `/api/students/{id}` | Delete a student |
+| `GET` | `/api/patients` | Get all patients (optional `?email=` filter) |
+| `GET` | `/api/patients/{id}` | Get a patient by ID |
+| `POST` | `/api/patients` | Create a new patient |
+| `PUT` | `/api/patients/{id}` | Update an existing patient |
+| `DELETE` | `/api/patients/{id}` | Delete a patient |
 
 **Create request example:**
 
@@ -297,40 +306,19 @@ Use Swagger to explore all four controllers, inspect request/response schemas, a
 {
   "firstName": "Jane",
   "lastName": "Doe",
-  "email": "jane.doe@academy.edu"
+  "email": "jane.doe@clinic.com"
 }
 ```
 
-### Courses — `api/courses`
+### Doctors — `api/doctors`
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| `GET` | `/api/courses` | Get all courses (optional `?teacherId=` filter) |
-| `GET` | `/api/courses/{id}` | Get a course by ID |
-| `POST` | `/api/courses` | Create a new course |
-| `PUT` | `/api/courses/{id}` | Update an existing course |
-| `DELETE` | `/api/courses/{id}` | Delete a course |
-
-**Create request example:**
-
-```json
-{
-  "title": "Introduction to Computer Science",
-  "description": "Foundational programming and algorithms course.",
-  "credits": 3,
-  "teacherId": 1
-}
-```
-
-### Teachers — `api/teachers`
-
-| Method | Route | Description |
-|--------|-------|-------------|
-| `GET` | `/api/teachers` | Get all teachers (optional `?department=` filter) |
-| `GET` | `/api/teachers/{id}` | Get a teacher by ID |
-| `POST` | `/api/teachers` | Create a new teacher |
-| `PUT` | `/api/teachers/{id}` | Update an existing teacher |
-| `DELETE` | `/api/teachers/{id}` | Delete a teacher |
+| `GET` | `/api/doctors` | Get all doctors (optional `?specialty=` filter) |
+| `GET` | `/api/doctors/{id}` | Get a doctor by ID |
+| `POST` | `/api/doctors` | Create a new doctor |
+| `PUT` | `/api/doctors/{id}` | Update an existing doctor |
+| `DELETE` | `/api/doctors/{id}` | Delete a doctor |
 
 **Create request example:**
 
@@ -338,31 +326,52 @@ Use Swagger to explore all four controllers, inspect request/response schemas, a
 {
   "firstName": "David",
   "lastName": "Cohen",
-  "email": "david.cohen@academy.edu",
-  "department": "Computer Science"
+  "email": "david.cohen@clinic.com",
+  "specialty": "Cardiology"
 }
 ```
 
-### Enrollments — `api/enrollments`
-
-Enrollments use a **composite key** (`StudentId` + `CourseId`) to link students to courses.
+### Treatments — `api/treatments`
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| `GET` | `/api/enrollments` | Get all enrollments (optional `?studentId=` / `?courseId=` filters) |
-| `GET` | `/api/enrollments/{studentId}/{courseId}` | Get a specific enrollment |
-| `POST` | `/api/enrollments` | Register a student to a course |
-| `PUT` | `/api/enrollments/{studentId}/{courseId}` | Update grade or enrollment date |
-| `DELETE` | `/api/enrollments/{studentId}/{courseId}` | Remove a student's course registration |
+| `GET` | `/api/treatments` | Get all treatments (optional `?doctorId=` filter) |
+| `GET` | `/api/treatments/{id}` | Get a treatment by ID |
+| `POST` | `/api/treatments` | Create a new treatment |
+| `PUT` | `/api/treatments/{id}` | Update an existing treatment |
+| `DELETE` | `/api/treatments/{id}` | Delete a treatment |
 
 **Create request example:**
 
 ```json
 {
-  "studentId": 1,
-  "courseId": 2,
-  "grade": 85,
-  "enrollmentDate": "2026-01-15T09:00:00Z"
+  "name": "General Checkup",
+  "description": "Routine health examination.",
+  "durationMinutes": 30,
+  "doctorId": 1
+}
+```
+
+### Appointments — `api/appointments`
+
+Appointments use a **composite key** (`PatientId` + `TreatmentId`) to link patients to treatments.
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| `GET` | `/api/appointments` | Get all appointments (optional `?patientId=` / `?treatmentId=` filters) |
+| `GET` | `/api/appointments/{patientId}/{treatmentId}` | Get a specific appointment |
+| `POST` | `/api/appointments` | Book a patient for a treatment |
+| `PUT` | `/api/appointments/{patientId}/{treatmentId}` | Update status or appointment date |
+| `DELETE` | `/api/appointments/{patientId}/{treatmentId}` | Cancel an appointment |
+
+**Create request example:**
+
+```json
+{
+  "patientId": 1,
+  "treatmentId": 2,
+  "status": 0,
+  "appointmentDate": "2026-01-15T09:00:00Z"
 }
 ```
 
@@ -374,6 +383,7 @@ Enrollments use a **composite key** (`StudentId` + `CourseId`) to link students 
 | `201 Created` | Resource successfully created |
 | `400 Bad Request` | Validation failure or invalid input |
 | `404 Not Found` | Resource does not exist |
+| `409 Conflict` | Duplicate appointment (patient already booked for treatment) |
 | `500 Internal Server Error` | Unhandled server error (logged; safe JSON returned to client) |
 
 ---
@@ -382,9 +392,9 @@ Enrollments use a **composite key** (`StudentId` + `CourseId`) to link students 
 
 | Setting | Location | Purpose |
 |---------|----------|---------|
-| Connection string | `AcademyLMS.API/appsettings.json` | LocalDB file path and server |
-| Development overrides | `AcademyLMS.API/appsettings.Development.json` | Environment-specific settings |
-| Launch URLs | `AcademyLMS.API/Properties/launchSettings.json` | Local development ports and Swagger launch URL |
+| Connection string | `ClinicFlow.API/appsettings.json` | LocalDB file path and server |
+| Development overrides | `ClinicFlow.API/appsettings.Development.json` | Environment-specific settings |
+| Launch URLs | `ClinicFlow.API/Properties/launchSettings.json` | Local development ports and Swagger launch URL |
 
 Database files (`.mdf`, `.ldf`) in the `DB/` folder are excluded from source control via `.gitignore`.
 
@@ -393,10 +403,10 @@ Database files (`.mdf`, `.ldf`) in the `DB/` folder are excluded from source con
 ## Quick Start (TL;DR)
 
 ```bash
-dotnet restore AcademyLMS.API
-dotnet build AcademyLMS.API
-dotnet ef database update --project AcademyLMS.DataAccess --startup-project AcademyLMS.API
-dotnet run --project AcademyLMS.API
+dotnet restore ClinicFlow.API
+dotnet build ClinicFlow.API
+dotnet ef database update --project ClinicFlow.DataAccess --startup-project ClinicFlow.API
+dotnet run --project ClinicFlow.API
 ```
 
 Then open **http://localhost:5161/swagger** to explore the API.

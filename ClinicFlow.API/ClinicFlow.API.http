@@ -1,0 +1,25 @@
+﻿@ClinicFlow.API_HostAddress = http://localhost:5161
+
+### Get all patients
+GET {{ClinicFlow.API_HostAddress}}/api/patients
+Accept: application/json
+
+###
+
+### Get all doctors
+GET {{ClinicFlow.API_HostAddress}}/api/doctors
+Accept: application/json
+
+###
+
+### Get all treatments
+GET {{ClinicFlow.API_HostAddress}}/api/treatments
+Accept: application/json
+
+###
+
+### Get all appointments
+GET {{ClinicFlow.API_HostAddress}}/api/appointments
+Accept: application/json
+
+###
