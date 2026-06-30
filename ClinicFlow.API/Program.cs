@@ -4,22 +4,13 @@ using ClinicFlow.DataAccess;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 var baseConnectionString = builder.Configuration.GetConnectionString("ClinicFlowDb")
     ?? throw new InvalidOperationException("Connection string 'ClinicFlowDb' was not found.");
 
-var connectionString = DatabaseConnectionBuilder.BuildAttachDbConnectionString(
-    baseConnectionString,
-    builder.Environment.ContentRootPath,
-    builder.Configuration["Database:DataDirectory"] ?? "DB",
-    builder.Configuration["Database:DatabaseFileName"] ?? "ClinicFlow.mdf");
-
-builder.Services.AddDataAccess(connectionString);
+builder.Services.AddDataAccess(baseConnectionString, builder.Environment.ContentRootPath, builder.Configuration);
 builder.Services.AddBusinessLogic();
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
@@ -38,7 +29,6 @@ var app = builder.Build();
 
 app.UseExceptionHandling();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -51,8 +41,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
 
 app.MapControllers();
 

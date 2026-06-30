@@ -78,7 +78,7 @@ public class DoctorsController : ControllerBase
 
         var updated = await _doctorService.UpdateAsync(id, doctorDto, cancellationToken);
         if (updated is null)
-        {
+        {   
             return NotFound($"Doctor with id {id} was not found.");
         }
 

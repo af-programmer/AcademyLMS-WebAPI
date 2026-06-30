@@ -3,18 +3,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicFlow.DataAccess.Repositories;
 
-public class AppointmentRepository : IAppointmentRepository
+public class AppointmentRepository : GenericRepository<Appointment>, IAppointmentRepository
 {
-    private readonly ClinicFlowDbContext _context;
-
-    public AppointmentRepository(ClinicFlowDbContext context)
+    public AppointmentRepository(ClinicFlowDbContext context) : base(context)
     {
-        _context = context;
     }
 
     public async Task<IReadOnlyList<Appointment>> GetAllAsync(int? patientId = null, int? treatmentId = null, CancellationToken cancellationToken = default)
     {
-        var query = _context.Appointments.AsNoTracking();
+        var query = DbSet.AsNoTracking();
 
         if (patientId.HasValue)
         {
@@ -31,36 +28,22 @@ public class AppointmentRepository : IAppointmentRepository
 
     public async Task<Appointment?> GetByIdAsync(int patientId, int treatmentId, CancellationToken cancellationToken = default)
     {
-        return await _context.Appointments
-            .AsNoTracking()
+        return await DbSet.AsNoTracking()
             .FirstOrDefaultAsync(
                 a => a.PatientId == patientId && a.TreatmentId == treatmentId,
                 cancellationToken);
     }
 
-    public async Task<Appointment> AddAsync(Appointment appointment, CancellationToken cancellationToken = default)
-    {
-        await _context.Appointments.AddAsync(appointment, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-        return appointment;
-    }
-
-    public async Task UpdateAsync(Appointment appointment, CancellationToken cancellationToken = default)
-    {
-        _context.Appointments.Update(appointment);
-        await _context.SaveChangesAsync(cancellationToken);
-    }
-
     public async Task<bool> DeleteAsync(int patientId, int treatmentId, CancellationToken cancellationToken = default)
     {
-        var appointment = await _context.Appointments.FindAsync([patientId, treatmentId], cancellationToken);
+        var appointment = await DbSet.FindAsync([patientId, treatmentId], cancellationToken);
         if (appointment is null)
         {
             return false;
         }
 
-        _context.Appointments.Remove(appointment);
-        await _context.SaveChangesAsync(cancellationToken);
+        DbSet.Remove(appointment);
+        await Context.SaveChangesAsync(cancellationToken);
         return true;
     }
 }

@@ -3,57 +3,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicFlow.DataAccess.Repositories;
 
-public class TreatmentRepository : ITreatmentRepository
+public class TreatmentRepository : GenericRepository<Treatment>, ITreatmentRepository
 {
-    private readonly ClinicFlowDbContext _context;
-
-    public TreatmentRepository(ClinicFlowDbContext context)
+    public TreatmentRepository(ClinicFlowDbContext context) : base(context)
     {
-        _context = context;
     }
 
     public async Task<IReadOnlyList<Treatment>> GetAllAsync(int? doctorId = null, CancellationToken cancellationToken = default)
     {
-        var query = _context.Treatments.AsNoTracking();
-
-        if (doctorId.HasValue)
+        if (!doctorId.HasValue)
         {
-            query = query.Where(t => t.DoctorId == doctorId.Value);
+            return await base.GetAllAsync(cancellationToken);
         }
 
-        return await query.ToListAsync(cancellationToken);
-    }
-
-    public async Task<Treatment?> GetByIdAsync(int treatmentId, CancellationToken cancellationToken = default)
-    {
-        return await _context.Treatments
-            .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.TreatmentId == treatmentId, cancellationToken);
-    }
-
-    public async Task<Treatment> AddAsync(Treatment treatment, CancellationToken cancellationToken = default)
-    {
-        await _context.Treatments.AddAsync(treatment, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-        return treatment;
-    }
-
-    public async Task UpdateAsync(Treatment treatment, CancellationToken cancellationToken = default)
-    {
-        _context.Treatments.Update(treatment);
-        await _context.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task<bool> DeleteAsync(int treatmentId, CancellationToken cancellationToken = default)
-    {
-        var treatment = await _context.Treatments.FindAsync([treatmentId], cancellationToken);
-        if (treatment is null)
-        {
-            return false;
-        }
-
-        _context.Treatments.Remove(treatment);
-        await _context.SaveChangesAsync(cancellationToken);
-        return true;
+        return await DbSet.AsNoTracking()
+            .Where(t => t.DoctorId == doctorId.Value)
+            .ToListAsync(cancellationToken);
     }
 }

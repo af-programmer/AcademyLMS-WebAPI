@@ -408,5 +408,6 @@ dotnet build ClinicFlow.API
 dotnet ef database update --project ClinicFlow.DataAccess --startup-project ClinicFlow.API
 dotnet run --project ClinicFlow.API
 ```
+dotnet run --project ClinicFlow.API
 
 Then open **http://localhost:5161/swagger** to explore the API.

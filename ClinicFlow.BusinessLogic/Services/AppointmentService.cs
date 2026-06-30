@@ -1,5 +1,4 @@
 ﻿using ClinicFlow.BusinessLogic.DTOs;
-using ClinicFlow.BusinessLogic.Exceptions;
 using ClinicFlow.DataAccess.Entities;
 using ClinicFlow.DataAccess.Repositories;
 using AutoMapper;
@@ -9,19 +8,11 @@ namespace ClinicFlow.BusinessLogic.Services;
 public class AppointmentService : IAppointmentService
 {
     private readonly IAppointmentRepository _appointmentRepository;
-    private readonly IPatientRepository _patientRepository;
-    private readonly ITreatmentRepository _treatmentRepository;
     private readonly IMapper _mapper;
 
-    public AppointmentService(
-        IAppointmentRepository appointmentRepository,
-        IPatientRepository patientRepository,
-        ITreatmentRepository treatmentRepository,
-        IMapper mapper)
+    public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper)
     {
         _appointmentRepository = appointmentRepository;
-        _patientRepository = patientRepository;
-        _treatmentRepository = treatmentRepository;
         _mapper = mapper;
     }
 
@@ -39,25 +30,6 @@ public class AppointmentService : IAppointmentService
 
     public async Task<AppointmentDto> CreateAsync(AppointmentCreateDto createDto, CancellationToken cancellationToken = default)
     {
-        var patient = await _patientRepository.GetByIdAsync(createDto.PatientId, cancellationToken);
-        if (patient is null)
-        {
-            throw new NotFoundException($"Patient with id {createDto.PatientId} was not found.");
-        }
-
-        var treatment = await _treatmentRepository.GetByIdAsync(createDto.TreatmentId, cancellationToken);
-        if (treatment is null)
-        {
-            throw new NotFoundException($"Treatment with id {createDto.TreatmentId} was not found.");
-        }
-
-        var existing = await _appointmentRepository.GetByIdAsync(createDto.PatientId, createDto.TreatmentId, cancellationToken);
-        if (existing is not null)
-        {
-            throw new ConflictException(
-                $"Patient {createDto.PatientId} already has an appointment for treatment {createDto.TreatmentId}.");
-        }
-
         var appointment = _mapper.Map<Appointment>(createDto);
         var created = await _appointmentRepository.AddAsync(appointment, cancellationToken);
         return _mapper.Map<AppointmentDto>(created);
@@ -83,8 +55,8 @@ public class AppointmentService : IAppointmentService
         return _mapper.Map<AppointmentDto>(existing);
     }
 
-    public async Task<bool> DeleteAsync(int patientId, int treatmentId, CancellationToken cancellationToken = default)
+    public Task<bool> DeleteAsync(int patientId, int treatmentId, CancellationToken cancellationToken = default)
     {
-        return await _appointmentRepository.DeleteAsync(patientId, treatmentId, cancellationToken);
+        return _appointmentRepository.DeleteAsync(patientId, treatmentId, cancellationToken);
     }
 }
